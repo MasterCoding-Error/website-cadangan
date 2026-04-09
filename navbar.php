@@ -2,25 +2,44 @@
 // Deteksi nama file yang sedang aktif
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// Pastikan session sudah dimulai (biasanya sudah di file utama, tapi aman untuk jaga-jaga)
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-include 'koneksi.php'; // Pastikan koneksi disertakan agar query jalan
+include 'koneksi.php'; 
 
-// Ambil Nama Pelapor berdasarkan ID User yang login
 $id_user_login = $_SESSION['id'];
-$nama_tampilan = "Member"; // Default jika tidak ketemu
+$role_user = $_SESSION['role'];
+$nama_tampilan = "Member"; 
+$id_pelapor_login = 0;
 
 if (isset($id_user_login)) {
-    $query_nama = mysqli_query($db, "SELECT nama FROM pelapor WHERE id_user = '$id_user_login'");
-    if ($data_nama = mysqli_fetch_assoc($query_nama)) {
-        $nama_tampilan = $data_nama['nama'];
+    $query_user = mysqli_query($db, "SELECT nama, id_pelapor FROM pelapor WHERE id_user = '$id_user_login'");
+    if ($data_user = mysqli_fetch_assoc($query_user)) {
+        $nama_tampilan = $data_user['nama'];
+        $id_pelapor_login = $data_user['id_pelapor'];
     } else {
-        // Jika di tabel pelapor tidak ada (misal admin yang tidak terdaftar sebagai penduduk)
         $nama_tampilan = $_SESSION['nama'] ?? 'Admin'; 
     }
+}
+
+// --- HITUNG NOTIFIKASI PERMANEN ---
+$count_notif = 0;
+
+if ($role_user == 'admin') {
+    // Admin: Tetap muncul selama status Antri atau Proses (tidak hilang sampai ditinjau lanjut)
+    $q_notif = mysqli_query($db, "SELECT COUNT(*) as total FROM pengaduan WHERE status IN ('Antri', 'Proses')");
+    $row_notif = mysqli_fetch_assoc($q_notif);
+    $count_notif = $row_notif['total'];
+} else {
+    // Pelapor: Notif HANYA muncul jika status sudah direspon admin DAN dilihat_pelapor masih 0
+    // Notif ini akan otomatis 0 karena di halaman tanggapan.php kita sudah melakukan UPDATE query dilihat_pelapor = 1
+    $q_notif = mysqli_query($db, "SELECT COUNT(*) as total FROM pengaduan 
+                                 WHERE id_pelapor = '$id_pelapor_login' 
+                                 AND status != 'Antri' 
+                                 AND dilihat_pelapor = 0");
+    $row_notif = mysqli_fetch_assoc($q_notif);
+    $count_notif = $row_notif['total'];
 }
 ?>
 <!doctype html>
@@ -44,10 +63,12 @@ if (isset($id_user_login)) {
       background-color: rgba(0, 0, 0, 0.1);
       font-weight: bold;
     }
-    .navbar-brand img { height: 30px; width: auto; margin-right: 10px; }
-    @media (max-width: 767.98px) {
-      .navbar-toggler { display: block !important; margin-right: 1rem; }
+    .badge-notif {
+      font-size: 0.7rem;
+      padding: 0.35em 0.65em;
+      border-radius: 50rem;
     }
+    .bg-proses { background-color: #ffc107; color: #000; } 
   </style>
 </head>
 <body>
@@ -60,8 +81,11 @@ if (isset($id_user_login)) {
 
     <ul class="navbar-nav flex-row d-md-none">
       <li class="nav-item text-nowrap">
-        <button class="nav-link px-3 text-white" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu">
+        <button class="nav-link px-3 text-white position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
           <i class="bi bi-list fs-3"></i>
+          <?php if($count_notif > 0): ?>
+            <span class="position-absolute top-0 start-50 translate-middle-x badge border border-light rounded-circle bg-danger p-1" style="margin-top: 10px;"></span>
+          <?php endif; ?>
         </button>
       </li>
     </ul>
@@ -87,7 +111,7 @@ if (isset($id_user_login)) {
               </div>
               <div class="flex-grow-1 ms-3 overflow-hidden">
                 <h6 class="mb-0 text-truncate fw-bold text-dark"><?php echo $nama_tampilan; ?></h6>
-                <small class="text-muted text-capitalize"><?php echo $_SESSION['role'] ?? 'None'; ?></small>
+                <small class="text-muted text-capitalize"><?php echo $role_user ?? 'None'; ?></small>
               </div>
             </div>
 
@@ -97,13 +121,17 @@ if (isset($id_user_login)) {
                   <i class="bi bi-house-door-fill"></i> Dashboard
                 </a>
               </li>
+              
               <li class="nav-item">
-                <a class="nav-link d-flex align-items-center gap-2 <?php echo ($current_page == 'pengaduan.php') ? 'active' : ''; ?>" href="pengaduan.php">
-                  <i class="bi bi-megaphone-fill"></i> Pengaduan
+                <a class="nav-link d-flex align-items-center justify-content-between gap-2 <?php echo ($current_page == 'pengaduan.php') ? 'active' : ''; ?>" href="pengaduan.php">
+                  <div><i class="bi bi-megaphone-fill me-2"></i> Pengaduan</div>
+                  <?php if ($role_user == 'admin' && $count_notif > 0): ?>
+                    <span class="badge bg-danger badge-notif" title="Antri & Proses"><?= $count_notif ?></span>
+                  <?php endif; ?>
                 </a>
               </li>
 
-              <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') { ?>
+              <?php if ($role_user == 'admin') { ?>
                 <li class="nav-item">
                   <a class="nav-link d-flex align-items-center gap-2 <?php echo ($current_page == 'pelapor.php') ? 'active' : ''; ?>" href="pelapor.php">
                     <i class="bi bi-people-fill"></i> Penduduk
@@ -112,12 +140,15 @@ if (isset($id_user_login)) {
               <?php } ?> 
 
               <li class="nav-item">
-                <a class="nav-link d-flex align-items-center gap-2 <?php echo ($current_page == 'tanggapan.php') ? 'active' : ''; ?>" href="tanggapan.php">
-                  <i class="bi bi-chat-left-dots-fill"></i> Tanggapan
+                <a class="nav-link d-flex align-items-center justify-content-between gap-2 <?php echo ($current_page == 'tanggapan.php') ? 'active' : ''; ?>" href="tanggapan.php">
+                  <div><i class="bi bi-chat-left-dots-fill me-2"></i> Tanggapan</div>
+                  <?php if ($role_user == 'pelapor' && $count_notif > 0): ?>
+                    <span class="badge bg-info text-dark badge-notif">Baru</span>
+                  <?php endif; ?>
                 </a>
               </li>
               
-              <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') { ?>
+              <?php if ($role_user == 'admin') { ?>
                 <li class="nav-item">
                   <a class="nav-link d-flex align-items-center gap-2 <?php echo ($current_page == 'laporan.php') ? 'active' : ''; ?>" href="laporan.php">
                     <i class="bi bi-file-earmark-text-fill"></i> Laporan
@@ -134,15 +165,6 @@ if (isset($id_user_login)) {
                 </a>
               </li>
             </ul>
-            
-            <div class="px-4 py-3">
-               <p class="text-muted mb-0" style="font-size: 0.75rem;">
-                <i class="bi bi-info-circle me-1"></i> 
-                © 2024 <strong>Desa Web</strong>. 
-                Hak Cipta Achmad Zidni.
-              </p>
-            </div>
-
           </div>
         </div>
       </div>
