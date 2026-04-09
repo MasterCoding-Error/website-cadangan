@@ -37,6 +37,13 @@
     $status = mysqli_real_escape_string($db, $_POST['status']);
     $tanggapan = mysqli_real_escape_string($db, $_POST['tanggapan']);
 
+    // Jika yang edit adalah admin, kita reset status 'dilihat_pelapor' jadi 0 
+    // supaya notif muncul lagi di akun warga tersebut.
+    $reset_notif = "";
+    if ($_SESSION['role'] == 'admin') {
+        $reset_notif = ", dilihat_pelapor = 0";
+    }
+
     if (!empty($_FILES['foto']['name'])) {
       $nama_file = $_FILES['foto']['name'];
       $ukuran_file = $_FILES['foto']['size'];
@@ -47,14 +54,18 @@
       } else {
           $new_name = time() . "_" . str_replace(' ', '+', $nama_file);
           move_uploaded_file($_FILES['foto']['tmp_name'], "uploads/" . $new_name);
-          $query_update = "UPDATE pengaduan SET tgl_kejadian='$tgl_kejadian', jenis_pengaduan='$jenis_pengaduan', isi_pengaduan='$isi_pengaduan', kategori='$kategori', status='$status', tanggapan='$tanggapan', foto='$new_name' WHERE id_pengaduan='$id_pengaduan'";
+          
+          // Tambahkan $reset_notif di dalam query
+          $query_update = "UPDATE pengaduan SET tgl_kejadian='$tgl_kejadian', jenis_pengaduan='$jenis_pengaduan', isi_pengaduan='$isi_pengaduan', kategori='$kategori', status='$status', tanggapan='$tanggapan', foto='$new_name' $reset_notif WHERE id_pengaduan='$id_pengaduan'";
           
           if (mysqli_query($db, $query_update)) {
             echo "<script>alert('Data Berhasil Diperbarui!'); window.location='pengaduan.php';</script>";
           }
       }
     } else {
-      $query_update = "UPDATE pengaduan SET tgl_kejadian='$tgl_kejadian', jenis_pengaduan='$jenis_pengaduan', isi_pengaduan='$isi_pengaduan', kategori='$kategori', status='$status', tanggapan='$tanggapan' WHERE id_pengaduan='$id_pengaduan'";
+      // Tambahkan $reset_notif di dalam query
+      $query_update = "UPDATE pengaduan SET tgl_kejadian='$tgl_kejadian', jenis_pengaduan='$jenis_pengaduan', isi_pengaduan='$isi_pengaduan', kategori='$kategori', status='$status', tanggapan='$tanggapan' $reset_notif WHERE id_pengaduan='$id_pengaduan'";
+      
       if (mysqli_query($db, $query_update)) {
         echo "<script>alert('Data Berhasil Diperbarui!'); window.location='pengaduan.php';</script>";
       }
@@ -256,7 +267,6 @@
   feather.replace();
   new DataTable('#table', { order: [] });
 
-  // 1. CEGAT FILE TERLALU BESAR
   document.querySelectorAll('.input-foto-edit').forEach(input => {
     input.addEventListener('change', function() {
       if (this.files.length > 0) {
@@ -277,7 +287,6 @@
     });
   });
 
-  // 2. POP-UP HAPUS KEREN
   document.querySelectorAll('.btn-hapus').forEach(btn => {
     btn.addEventListener('click', function() {
       const idHapus = this.getAttribute('data-id');
@@ -302,7 +311,6 @@
     });
   });
 
-  // 3. Panel Admin toggle
   document.querySelectorAll('.radio-status').forEach(select => {
     select.addEventListener('change', function() {
       const id = this.getAttribute('data-id');
