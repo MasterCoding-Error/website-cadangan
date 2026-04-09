@@ -1,0 +1,84 @@
+/* --- TEMA KHUSUS KABUPATEN MALANG --- */
+    :root {
+      --primary-malang: #065f46;   /* Hijau Emerald */
+      --secondary-malang: #0284c7; /* Biru */
+      --accent-malang: #fbbf24;    /* Emas */
+    }
+
+    /* Navbar Atas */
+    header.navbar {
+      background: linear-gradient(to right, var(--primary-malang), var(--secondary-malang)) !important;
+      border-bottom: 2px solid var(--accent-malang);
+      padding: 0.75rem !important;
+    }
+
+    .navbar-brand {
+      font-weight: 800 !important;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* Sidebar Container */
+    .sidebar {
+      background-color: #ffffff !important;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.05) !important;
+      z-index: 100;
+    }
+
+    /* Profil Area di Sidebar */
+    .sidebar .d-flex.align-items-center {
+      background: rgba(6, 95, 70, 0.05);
+      margin: 10px;
+      border-radius: 15px;
+      border: 1px solid rgba(6, 95, 70, 0.1);
+    }
+
+    .rounded-circle.bg-secondary {
+      background: linear-gradient(135deg, var(--primary-malang), var(--secondary-malang)) !important;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Link Menu Sidebar */
+    .sidebar .nav-link {
+      margin: 4px 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: #475569 !important;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar .nav-link svg {
+      color: var(--primary-malang);
+      transition: all 0.3s ease;
+    }
+
+    /* Hover & Active State */
+    .sidebar .nav-link:hover {
+      background-color: rgba(2, 132, 199, 0.1) !important;
+      color: var(--secondary-malang) !important;
+      transform: translateX(5px);
+    }
+
+    .sidebar .nav-link.active {
+      background: linear-gradient(to right, var(--primary-malang), var(--secondary-malang)) !important;
+      color: white !important;
+      box-shadow: 0 4px 12px rgba(6, 95, 70, 0.2);
+    }
+
+    .sidebar .nav-link.active svg {
+      color: white !important;
+    }
+
+    /* Tombol Sign Out */
+    .nav-link[href="logout.php"] {
+      color: #dc2626 !important; /* Warna Merah */
+    }
+
+    .nav-link[href="logout.php"]:hover {
+      background-color: #fef2f2 !important;
+      color: #b91c1c !important;
+    }
+
+    .nav-link[href="logout.php"] svg {
+      color: #dc2626;
+    }

@@ -1,0 +1,54 @@
+/* Media Query untuk HP (Layar di bawah 768px) */
+@media (max-width: 767.98px) {
+    /* 1. Atur ulang posisi main agar tidak tertutup navbar */
+    main {
+        position: relative !important;
+        top: 0 !important;
+        width: 100% !important;
+        padding-top: 20px;
+    }
+
+    /* 2. Sesuaikan ukuran font judul agar tidak terlalu besar */
+    .dashboard-title {
+        font-size: 1.875rem; /* text-3xl */
+        line-height: 2.25rem;
+    }
+
+    /* 3. Atur grid agar menjadi 1 kolom saja di HP */
+    .grid-cols-3 {
+        grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+        gap: 1.5rem !important;
+    }
+
+    /* 4. Sesuaikan padding pada Glass Card */
+    .glass-card {
+        padding: 1.5rem !important;
+        border-radius: 1.5rem;
+    }
+
+    /* 5. Kecilkan ukuran angka statistik agar muat */
+    .text-5xl {
+        font-size: 2.5rem !important;
+    }
+
+    /* 6. Hilangkan gambar logo di bawah agar tidak memakan tempat, 
+       atau kecilkan ukurannya */
+    .mt-20 img {
+        margin-top: 2rem;
+        width: 60px !important;
+    }
+
+    /* 7. Pastikan modal tidak terlalu mepet ke pinggir layar */
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .modal-content {
+        border-radius: 1.5rem !important;
+    }
+}
+
+/* Tambahan: Perbaikan untuk sidebar Bootstrap agar bisa disembunyikan */
+.sidebar {
+    z-index: 1000;
+}
